@@ -29,7 +29,6 @@ set "BowMsg=!attacker! shot an arrow at !target! for !damage! damage!"
 set "KpingaMsg=!attacker! threw a kpinga at !target! for !damage! damage!"
 set "HammerMsg=!attacker! bonked !target! hard for !damage! damage!"
 
-::=== Main Menu ===
 :main_menu
 cls
 echo ================================
@@ -40,11 +39,20 @@ echo 1. Start Game
 echo 2. Credits
 echo 3. Exit
 echo.
+
+set "choice="
 set /p choice="Choose: "
+
 if "%choice%"=="1" goto start_game
 if "%choice%"=="2" goto credits
 if "%choice%"=="3" exit
+
+:: Handle invalid or empty input
+echo Invalid choice. Please select 1, 2, or 3.
+pause
 goto main_menu
+
+
 
 :credits
 cls
