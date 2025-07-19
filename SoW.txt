@@ -1,0 +1,441 @@
+@echo off
+title Spears of Wrath - PC-0.0.1a
+color 0A
+setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
+
+::=== Define Character Stats ===
+set "Human=100 15 10"
+set "Orc=120 20 5"
+set "Dwarf=110 18 8"
+set "Elf=90 13 15"
+set "Leporian=95 16 12"
+set "Demon=130 25 2"
+
+::=== Define Weapon Stats ===
+set "Sword=5 80"
+set "BattleAxe=10 65"
+set "Spear=7 75"
+set "Katana=6 85"
+set "Bow=4 90"
+set "Kpinga=8 70"
+set "Hammer=12 60"
+
+::=== Weapon Attack Messages ===
+set "SwordMsg=!attacker! sliced !target! for !damage! damage!"
+set "BattleAxeMsg=!attacker! smashed !target! with a brutal swing for !damage! damage!"
+set "SpearMsg=!attacker! jabbed !target! sharply for !damage! damage!"
+set "KatanaMsg=!attacker! epically slashed !target! for !damage! damage!"
+set "BowMsg=!attacker! shot an arrow at !target! for !damage! damage!"
+set "KpingaMsg=!attacker! threw a kpinga at !target! for !damage! damage!"
+set "HammerMsg=!attacker! bonked !target! hard for !damage! damage!"
+
+::=== Main Menu ===
+:main_menu
+cls
+echo ================================
+echo         Spears of Wrath
+echo ================================
+echo.
+echo 1. Start Game
+echo 2. Credits
+echo 3. Exit
+echo.
+set /p choice="Choose: "
+if "%choice%"=="1" goto start_game
+if "%choice%"=="2" goto credits
+if "%choice%"=="3" exit
+goto main_menu
+
+:credits
+cls
+echo Spears of Wrath - PC-0.0.1a
+echo By: Titanosus Games
+echo Built in pure Batch for Win9x
+pause
+goto main_menu
+
+:start_game
+call :player_setup 1
+call :player_setup 2
+setlocal ENABLEDELAYEDEXPANSION
+set turn=1
+goto game_loop
+
+::=== Player Setup ===
+:player_setup
+setlocal ENABLEDELAYEDEXPANSION
+set player=%1
+cls
+echo Player %player% - Enter your name:
+set /p pname=Name: 
+
+:choose_character
+cls
+echo Player %player% - Choose your character:
+echo.
+echo 1. Human
+echo 2. Orc
+echo 3. Dwarf
+echo 4. Elf
+echo 5. Leporian
+echo 6. Demon
+set /p csel="Choice: "
+if "%csel%"=="1" set char=Human
+if "%csel%"=="2" set char=Orc
+if "%csel%"=="3" set char=Dwarf
+if "%csel%"=="4" set char=Elf
+if "%csel%"=="5" set char=Leporian
+if "%csel%"=="6" set char=Demon
+
+if not defined char (
+    echo Invalid choice, please select a valid character.
+    pause
+    goto choose_character
+)
+
+call set "charStats=%%%char%%%"
+for /f "tokens=1,2,3" %%a in ("%charStats%") do (
+    set "hp=%%a"
+    set "atk=%%b"
+    set "heal=%%c"
+)
+
+:choose_weapon
+cls
+echo Player %player% - Choose your weapon:
+echo.
+echo 1. Sword
+echo 2. BattleAxe
+echo 3. Spear
+echo 4. Katana
+echo 5. Bow
+echo 6. Kpinga
+echo 7. Hammer
+set /p wsel="Choice: "
+if "%wsel%"=="1" set weapon=Sword
+if "%wsel%"=="2" set weapon=BattleAxe
+if "%wsel%"=="3" set weapon=Spear
+if "%wsel%"=="4" set weapon=Katana
+if "%wsel%"=="5" set weapon=Bow
+if "%wsel%"=="6" set weapon=Kpinga
+if "%wsel%"=="7" set weapon=Hammer
+
+if not defined weapon (
+    echo Invalid choice, please select a valid weapon.
+    pause
+    goto choose_weapon
+)
+
+call set "wpnStats=%%%weapon%%%"
+for /f "tokens=1,2" %%x in ("%wpnStats%") do (
+    set "wbonus=%%x"
+    set "wsuccess=%%y"
+)
+
+endlocal & (
+    set "p%player%_name=%pname%"
+    set "p%player%_char=%char%"
+    set "p%player%_weapon=%weapon%"
+    set "p%player%_hp=%hp%"
+    set "p%player%_atk=%atk%"
+    set "p%player%_heal=%heal%"
+    set "p%player%_wbonus=%wbonus%"
+    set "p%player%_wsuccess=%wsuccess%"
+    set "p%player%_block=0"
+    set "p%player%_poison=0"
+    set "p%player%_skip=0"
+    set "p%player%_weak=0"
+    set "p%player%_baseatk=%atk%"
+    set "p%player%_heavyCharge=0"
+    set "p%player%_forceField=0"
+)
+goto :eof
+
+::=== Game Loop ===
+:game_loop
+cls
+call :draw_status
+set /a other=3-%turn%
+echo.
+echo !p%turn%_name! the !p%turn%_char! wields a !p%turn%_weapon!
+echo It is your turn, !p%turn%_name!
+echo.
+
+:: -- Start of Turn Effects --
+
+:: Poison damage tick (if no force field)
+if !p%turn%_poison! GTR 0 (
+    if !p%turn%_forceField! EQU 0 (
+        echo You take 5 poison damage!
+        set /a p%turn%_hp-=5
+        set /a p%turn%_poison-=1
+        if !p%turn%_hp! LEQ 0 (
+            echo.
+            echo !p%other%_name! is victorious!
+            pause
+            goto main_menu
+        )
+    ) else (
+        echo Your Force Field protected you from poison damage!
+        set /a p%turn%_poison-=1
+    )
+)
+
+:: Decrease block duration at start of turn
+if !p%turn%_block! GTR 0 (
+    set /a p%turn%_block-=1
+    if !p%turn%_block! EQU 0 echo Your block has worn off.
+)
+
+:: Decrease weakness duration at start of turn
+if !p%turn%_weak! GTR 0 (
+    set /a p%turn%_weak-=1
+    if !p%turn%_weak! EQU 0 (
+        echo Your attack power returns to normal!
+        set /a p%turn%_atk=!p%turn%_baseatk!
+    )
+)
+
+:: Decrease force field duration at start of turn
+if !p%turn%_forceField! GTR 0 (
+    set /a p%turn%_forceField-=1
+    if !p%turn%_forceField! EQU 0 echo Your Force Field has faded.
+)
+
+:: Handle heavy attack charging
+if !p%turn%_heavyCharge! GTR 0 (
+    set /a p%turn%_heavyCharge-=1
+    if !p%turn%_heavyCharge! EQU 0 (
+        call :heavy_attack
+        pause
+        goto next_turn
+    ) else (
+        echo Charging heavy attack... !p%turn%_heavyCharge! turns left
+        pause
+        goto next_turn
+    )
+)
+
+:: Skip turn check (can't skip heavy attack charge)
+if !p%turn%_skip! EQU 1 (
+    echo You were stunned and lost your turn!
+    set /a p%turn%_skip=0
+    pause
+    goto next_turn
+)
+
+echo 1. Attack
+echo 2. Heavy Attack (Charge)
+echo 3. Heal
+echo 4. Effect
+echo 5. Block
+echo 6. Force_Field (Block Effects)
+set /p action="Choose action: "
+
+if "%action%"=="1" call :attack & goto next_turn
+if "%action%"=="2" call :start_heavy_attack & goto next_turn
+if "%action%"=="3" call :heal & goto next_turn
+if "%action%"=="4" call :effect & goto next_turn
+if "%action%"=="5" call :block & goto next_turn
+if "%action%"=="6" call :force_field & goto next_turn
+
+echo Invalid choice.
+pause
+goto game_loop
+
+:next_turn
+set /a turn=3-%turn%
+goto game_loop
+
+::=== Draw Status ===
+:draw_status
+echo -----------------------------------
+echo !p1_name! the !p1_char! ^| Weapon: !p1_weapon!
+echo HP: !p1_hp! ^| Block: !p1_block! ^| Poison: !p1_poison! ^| Weakness: !p1_weak! ^| Force Field: !p1_forceField!
+echo.
+echo !p2_name! the !p2_char! ^| Weapon: !p2_weapon!
+echo HP: !p2_hp! ^| Block: !p2_block! ^| Poison: !p2_poison! ^| Weakness: !p2_weak! ^| Force Field: !p2_forceField!
+echo -----------------------------------
+echo Version: PC-0.0.1a
+goto :eof
+
+::=== Actions ===
+:attack
+set /a rand=%RANDOM%%%100
+set /a success=!p%turn%_wsuccess!
+if %rand% GEQ %success% (
+    echo Your attack missed!
+    pause
+    goto :eof
+)
+
+:: Check if opponent has block
+if !p%other%_block! GTR 0 (
+    echo Your attack was blocked by !p%other%_name!'s guard!
+    set /a p%other%_block-=1
+    pause
+    goto :eof
+)
+
+:: Calculate damage (apply weakness if any)
+set /a damage=!p%turn%_atk! + !p%turn%_wbonus! + (%RANDOM%%%6)
+
+echo Your attack hit for %damage% damage!
+
+set /a p%other%_hp-=damage
+pause
+
+if !p%other%_hp! LEQ 0 (
+    echo.
+    echo !p%turn%_name! is victorious!
+    pause
+    goto main_menu
+)
+goto :eof
+
+
+:start_heavy_attack
+cls
+echo Enter number of turns to charge heavy attack (1-10):
+set /p chargeTurns="Charge turns: "
+
+:: Validate numeric input
+for /f "delims=0123456789" %%a in ("%chargeTurns%") do set chargeTurns=0
+if %chargeTurns% LEQ 0 set chargeTurns=0
+if %chargeTurns% GTR 10 set chargeTurns=10
+
+if %chargeTurns% EQU 0 (
+    echo Invalid charge duration.
+    pause
+    goto game_loop
+)
+
+set /a p%turn%_heavyCharge=chargeTurns
+set /a p%turn%_heavyCharge_saved=chargeTurns
+echo You begin charging a heavy attack for %chargeTurns% turn(s). You will skip turns until the attack is unleashed.
+goto :eof
+
+:heavy_attack
+:: Check if heavy attack hits based on success chance
+set /a rand=%RANDOM%%%100
+set /a success=!p%turn%_wsuccess!
+if %rand% GEQ %success% (
+    echo Your heavy attack skipped your opponent!
+    set /a p%turn%_heavyCharge=0
+    set /a p%turn%_heavyCharge_saved=0
+    pause
+    goto next_turn
+)
+
+:: Calculate heavy damage: base damage * (1.5 per chargeTurn = 3/2 ratio)
+set /a charge=!p%turn%_heavyCharge_saved!
+if "%charge%"=="" set charge=1
+
+set /a baseDamage=!p%turn%_atk! + !p%turn%_wbonus! + (%RANDOM%%%6)
+set /a multiplier=(3 * charge) / 2
+set /a damage=baseDamage * multiplier
+
+call :weapon_msg %damage% heavy attack
+
+set /a p%other%_hp-=damage
+set /a p%turn%_heavyCharge=0
+set /a p%turn%_heavyCharge_saved=0
+
+if !p%other%_hp! LEQ 0 (
+    echo.
+    echo !p%turn%_name! is victorious!
+    pause
+    goto main_menu
+)
+pause
+goto :eof
+
+
+
+:effect
+set /a eff=%RANDOM%%%5
+
+if !p%other%_forceField! GTR 0 (
+    echo !p%other%_name!'s Force Field shielded them from your effect!
+    pause
+    goto :eof
+)
+
+if "%eff%"=="0" (
+    echo You poisoned your opponent!
+    set /a p%other%_poison=3
+    pause
+    goto :eof
+) 
+
+if "%eff%"=="1" (
+    echo You caused your opponent to skip a turn!
+    set /a p%other%_skip=1
+    pause
+    goto :eof
+) 
+
+if "%eff%"=="2" (
+    echo You weakened their attack for 2 turns!
+    set /a p%other%_weak=2
+    set /a p%other%_atk-=2
+    pause
+    goto :eof
+) 
+
+if "%eff%"=="3" (
+    echo You gave your opponent a Force Field for 1-2 turns!
+    set /a p%other%_forceField=1 + (%RANDOM%%%2)
+    pause
+    goto :eof
+) 
+
+:: else backfire
+echo Backfire! You healed your opponent for 10 HP!
+set /a p%other%_hp+=10
+pause
+goto :eof
+
+
+:block
+set /a dur=3 + (%RANDOM%%%3)
+set /a p%turn%_block=%dur%
+echo You are blocking for %dur% turns!
+pause
+goto :eof
+
+:force_field
+set /a p%turn%_forceField=1 + (%RANDOM%%%2)
+echo You activated a Force Field for !p%turn%_forceField! turn(s)! It will block negative effects.
+pause
+goto :eof
+
+
+::=== Weapon Message Helper ===
+:weapon_msg
+:: %1 = damage, %2 = attack type ("attack" or "heavy attack")
+
+setlocal enabledelayedexpansion
+set damage=%1
+set attackType=%2
+
+:: Get attacker and target names
+set attacker=!p%turn%_name!
+set target=!p%other%_name!
+set weapon=!p%turn%_weapon!
+
+if "!attackType!"=="heavy attack" (
+    set msg="!attacker! unleashed a powerful heavy strike on !target! for !damage! damage!"
+) else (
+    if "!weapon!"=="Sword" set msg="!attacker! sliced !target! for !damage! damage!"
+    if "!weapon!"=="Katana" set msg="!attacker! epically slashed !target! for !damage! damage!"
+    if "!weapon!"=="Hammer" set msg="!attacker! bonked !target! hard for !damage! damage!"
+    if "!weapon!"=="BattleAxe" set msg="!attacker! smashed !target! with a brutal swing for !damage! damage!"
+    if "!weapon!"=="Spear" set msg="!attacker! jabbed !target! sharply for !damage! damage!"
+    if "!weapon!"=="Bow" set msg="!attacker! shot an arrow at !target! for !damage! damage!"
+    if "!weapon!"=="Kpinga" set msg="!attacker! threw a kpinga at !target! for !damage! damage!"
+    if not defined msg set msg="!attacker! attacked !target! for !damage! damage!"
+)
+
+echo !msg!
+endlocal & goto :eof
