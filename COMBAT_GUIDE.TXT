@@ -1,0 +1,102 @@
+=======================================
+           SPEARS OF WRATH
+        COMBAT REFERENCE GUIDE
+            Version PC-0.0.1a
+=======================================
+
+>>> SPECIES OVERVIEW <<<
+
+Each species has its own base stats:
+  - HP: Starting Health
+  - ATK: Base Damage
+  - HEAL: Recovery per heal action
+
+  +------------------------------+
+  | Species     | HP | ATK | HL |
+  |-------------|----|-----|----|
+  | Human       |100 | 15  |10  |
+  | Orc         |120 | 20  | 5  |
+  | Dwarf       |110 | 18  | 8  |
+  | Elf         | 90 | 13  |15  |
+  | Leporian    | 95 | 16  |12  |
+  | Demon       |130 | 25  | 2  |
+  +------------------------------+
+
+
+>>> WEAPON STATS <<<
+
+Each weapon adds bonus damage and has a hit chance.
+
+  +---------------------------------------------+
+  | Weapon     | Bonus | Hit % | Attack Message |
+  |------------|--------|--------|----------------|
+  | Sword      | +5    | 80%   | sliced          |
+  | Katana     | +6    | 85%   | epically slashed|
+  | Hammer     | +12   | 60%   | bonked hard     |
+  | BattleAxe  | +10   | 65%   | smashed         |
+  | Spear      | +7    | 75%   | jabbed sharply  |
+  | Bow        | +4    | 90%   | shot an arrow   |
+  | Kpinga     | +8    | 70%   | threw a kpinga  |
+  +---------------------------------------------+
+
+
+>>> ATTACK TYPES <<<
+
+1. ATTACK
+   - Normal attack.
+   - Damage = ATK + Weapon Bonus + Random (0-5)
+   - Can MISS based on weapon %.
+   - Can be BLOCKED.
+   - Dynamic weapon message shown.
+
+2. HEAVY ATTACK
+   - Must CHARGE for 1-10 turns.
+   - Damage = 1.5x to 15x normal (per charge).
+   - Can MISS but cannot be BLOCKED.
+   - Skips turns while charging.
+   - Unleashes a powerful strike when ready.
+
+3. HEAL
+   - Restores HP = HEAL + Random(0-5)
+   - Not blocked.
+   - Useful for low-HP recoveries.
+
+4. EFFECT
+   - Applies a random effect to opponent:
+     0 = Poison (5 dmg/turn for 3 turns)
+     1 = Skip Turn (lose next turn)
+     2 = Weakness (-2 ATK for 2 turns)
+     3 = Force Field (gives opponent a shield)
+     4 = Backfire (you heal enemy by 10 HP)
+   - All negative effects are blocked by Force Field.
+
+5. BLOCK
+   - Blocks incoming attacks for 3-5 turns.
+   - Does NOT block effects.
+   - Each attack drains 1 block charge.
+
+6. FORCE_FIELD
+   - Blocks all negative effects (poison, weaken, skip).
+   - Lasts 1-2 turns.
+   - Does not block damage.
+
+>>> COMBAT FLOW <<<
+
+  - Poison, Weakness, and Force Field timers update each turn.
+  - Heavy attacks are stored and release after charging.
+  - Skip Turn effect causes a player to lose their next action.
+  - Block and Force Field wear off automatically after time.
+  - Game ends when opponent HP <= 0.
+
+>>> NOTES <<<
+
+  - All random values use DOS %RANDOM%.
+  - Effects are not always guaranteed to be harmful!
+  - Heavy attacks require timing and risk.
+
+=======================================
+  Spears of Wrath is a two-player
+  fantasy duel game for Windows 9x.
+  All systems written in pure .BAT
+  script format.
+=======================================
